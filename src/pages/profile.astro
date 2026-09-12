@@ -1,0 +1,106 @@
+---
+import Layout from '../layouts/Layout.astro';
+import KitCard from '../components/KitCard.astro';
+import SiteNav from '../components/SiteNav.astro';
+import { kits } from '../data/kits';
+---
+
+<Layout title="Profile — RSI">
+	<header class="header">
+		<div class="header-inner">
+			<p class="wordmark">RSI</p>
+			<p class="tagline">Your builds, saved on this device</p>
+			<SiteNav current="profile" />
+		</div>
+	</header>
+
+	<main class="main">
+		<h2 class="section-title">Finished builds</h2>
+
+		<div id="completed-grid" class="completed-grid">
+			{
+				kits.map((kit) => (
+					<div class="completed-result" data-slug={kit.slug} hidden>
+						<KitCard kit={kit} />
+					</div>
+				))
+			}
+		</div>
+
+		<p id="completed-empty" class="empty-text" hidden>
+			You haven't finished any builds yet. Follow a kit's instructions to the end to see it here.
+		</p>
+	</main>
+</Layout>
+
+<script>
+	import { getCompletedKits } from '../lib/profileStore';
+
+	const completedItems = Array.from(document.querySelectorAll<HTMLElement>('.completed-result'));
+	const completedEmpty = document.getElementById('completed-empty') as HTMLElement;
+
+	const completed = getCompletedKits();
+	let anyVisible = false;
+	completedItems.forEach((el) => {
+		const isDone = completed.includes(el.dataset.slug ?? '');
+		el.hidden = !isDone;
+		if (isDone) anyVisible = true;
+	});
+	completedEmpty.hidden = anyVisible;
+</script>
+
+<style>
+	.header {
+		background: linear-gradient(180deg, var(--wood-light) 0%, var(--wood) 60%, var(--wood-dark) 100%);
+		border-bottom: 4px solid var(--wood-dark);
+		padding: 2.25rem 1.5rem 1.75rem;
+	}
+
+	.header-inner {
+		max-width: 1120px;
+		margin: 0 auto;
+		text-align: center;
+	}
+
+	.wordmark {
+		font-family: var(--font-display);
+		font-size: clamp(2.75rem, 6vw, 4rem);
+		font-weight: 600;
+		margin: 0;
+		color: var(--text-light);
+		letter-spacing: 0.04em;
+	}
+
+	.tagline {
+		margin: 0.5rem 0 0;
+		font-family: var(--font-body);
+		font-size: 1.25rem;
+		color: rgba(244, 239, 223, 0.75);
+	}
+
+	.main {
+		max-width: 900px;
+		margin: 0 auto;
+		padding: 3rem 1.5rem;
+		min-height: calc(100vh - 320px);
+	}
+
+	.section-title {
+		font-family: var(--font-display);
+		font-size: clamp(1.6rem, 4vw, 2.1rem);
+		color: var(--page-text);
+		margin: 0 0 1.5rem;
+	}
+
+	.completed-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.empty-text {
+		font-size: 1.1rem;
+		color: var(--page-muted);
+		line-height: 1.6;
+	}
+</style>

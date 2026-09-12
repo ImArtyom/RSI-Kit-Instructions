@@ -1,0 +1,50 @@
+---
+interface Props {
+	current: 'home' | 'recommended' | 'profile';
+}
+
+const { current } = Astro.props;
+
+const links = [
+	{ key: 'home', label: 'Home', href: '/' },
+	{ key: 'recommended', label: 'Recommended', href: '/recommended' },
+	{ key: 'profile', label: 'Profile', href: '/profile' },
+] as const;
+---
+
+<nav class="site-nav" aria-label="Main">
+	{
+		links.map((link) => (
+			<a href={link.href} class:list={['site-nav-link', { active: link.key === current }]}>
+				{link.label}
+			</a>
+		))
+	}
+</nav>
+
+<style>
+	.site-nav {
+		display: flex;
+		justify-content: center;
+		gap: 2rem;
+		margin-top: 1.5rem;
+	}
+
+	.site-nav-link {
+		font-family: var(--font-display);
+		font-size: 1.1rem;
+		text-decoration: none;
+		color: rgba(244, 239, 223, 0.7);
+		padding-bottom: 0.35rem;
+		border-bottom: 3px solid transparent;
+	}
+
+	.site-nav-link:hover {
+		color: var(--text-light);
+	}
+
+	.site-nav-link.active {
+		color: var(--lantern);
+		border-bottom-color: var(--lantern);
+	}
+</style>

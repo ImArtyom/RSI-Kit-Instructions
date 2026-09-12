@@ -1,0 +1,387 @@
+---
+import { Image } from 'astro:assets';
+import Layout from '../../../layouts/Layout.astro';
+import ShulkerIcon from '../../../components/ShulkerIcon.astro';
+import { kits } from '../../../data/kits';
+import { getKitStepImage } from '../../../data/kitImages';
+
+export function getStaticPaths() {
+	return kits.map((kit) => ({
+		params: { slug: kit.slug },
+		props: { kit },
+	}));
+}
+
+const { kit } = Astro.props;
+const steps = kit.steps.map((caption, i) => ({
+	caption,
+	image: getKitStepImage(kit.slug, i + 1),
+}));
+---
+
+<Layout title={`${kit.name} instructions — RSI`} showThemeToggle={false}>
+	<header class="header">
+		<div class="header-inner">
+			<a class="back" href={`/kits/${kit.slug}`}>&lsaquo; {kit.name}</a>
+		</div>
+	</header>
+
+	<main class="main">
+		<p id="counter" class="counter">Step 1 of {steps.length}</p>
+
+		<div id="steps" data-kit-slug={kit.slug}>
+			{
+				steps.map((step, i) => (
+					<div class="step" data-index={i}>
+						<div class="step-image">
+							<Image src={step.image} alt={`Step ${i + 1}: ${step.caption}`} width={1800} height={1013} />
+						</div>
+						<p class="step-caption">{step.caption}</p>
+					</div>
+				))
+			}
+
+			<div class="step congrats" data-index={steps.length}>
+				<div class="congrats-panel">
+					<div class="congrats-icon">
+						<ShulkerIcon color={kit.color} size={96} />
+					</div>
+					<p class="congrats-eyebrow">Build complete</p>
+					<h2 class="congrats-title">{kit.name}</h2>
+					<p class="congrats-text">Nice work — your door is fully built and ready to use.</p>
+					<div class="congrats-actions">
+						<a class="congrats-button" href={`/kits/${kit.slug}`}>Back to kit</a>
+						<a class="congrats-link" href="/">All kits</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="nav" class="nav">
+			<button id="prev" class="nav-button" type="button">Back</button>
+			<button id="next" class="nav-button nav-button-primary" type="button">Next</button>
+		</div>
+	</main>
+</Layout>
+
+<script>
+	import { markKitCompleted } from '../../../lib/profileStore';
+
+	const stepsContainer = document.getElementById('steps') as HTMLElement;
+	const kitSlug = stepsContainer.dataset.kitSlug ?? '';
+	const steps = Array.from(document.querySelectorAll<HTMLElement>('.step'));
+	const counter = document.getElementById('counter') as HTMLElement;
+	const nav = document.getElementById('nav') as HTMLElement;
+	const prevBtn = document.getElementById('prev') as HTMLButtonElement;
+	const nextBtn = document.getElementById('next') as HTMLButtonElement;
+
+	const total = steps.length - 1;
+	let current = 0;
+
+	function render() {
+		steps.forEach((el, i) => {
+			el.hidden = i !== current;
+		});
+
+		const isCongrats = current === steps.length - 1;
+		nav.hidden = isCongrats;
+		counter.hidden = isCongrats;
+		counter.textContent = `Step ${current + 1} of ${total}`;
+		prevBtn.disabled = current === 0;
+		nextBtn.textContent = current === total - 1 ? 'Finish' : 'Next';
+
+		if (isCongrats && kitSlug) {
+			markKitCompleted(kitSlug);
+		}
+	}
+
+	function goTo(index: number) {
+		current = Math.max(0, Math.min(steps.length - 1, index));
+		render();
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}
+
+	prevBtn.addEventListener('click', () => goTo(current - 1));
+	nextBtn.addEventListener('click', () => goTo(current + 1));
+
+	document.addEventListener('keydown', (event) => {
+		if (nav.hidden) return;
+		if (event.key === 'ArrowRight') goTo(current + 1);
+		if (event.key === 'ArrowLeft') goTo(current - 1);
+	});
+
+	render();
+</script>
+
+<style>
+	.header {
+		background: linear-gradient(180deg, var(--wood-light) 0%, var(--wood) 60%, var(--wood-dark) 100%);
+		border-bottom: 4px solid var(--wood-dark);
+		padding: 1.5rem;
+	}
+
+	.header-inner {
+		max-width: 1600px;
+		margin: 0 auto;
+	}
+
+	.back {
+		display: inline-block;
+		font-family: var(--font-body);
+		font-size: 1.1rem;
+		color: rgba(244, 239, 223, 0.75);
+		text-decoration: none;
+	}
+
+	.back:hover {
+		color: var(--text-light);
+	}
+
+	.main {
+		max-width: 1600px;
+		margin: 0 auto;
+		padding: 2rem 1.5rem 3rem;
+	}
+
+	.counter {
+		text-align: center;
+		font-family: var(--font-display);
+		font-size: 1rem;
+		color: var(--page-muted);
+		margin: 0 0 1.25rem;
+	}
+
+	.step[hidden] {
+		display: none;
+	}
+
+	.step {
+		display: block;
+	}
+
+	.step:not(.congrats):not([hidden]) {
+		animation: step-in 0.35s ease;
+	}
+
+	@keyframes step-in {
+		from {
+			opacity: 0;
+			transform: translateY(12px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.step-image {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		max-width: 1500px;
+		max-height: 82vh;
+		margin: 0 auto;
+		background: var(--stone);
+		border-top: 3px solid var(--stone-light);
+		border-left: 3px solid var(--stone-light);
+		border-right: 3px solid var(--stone-darker);
+		border-bottom: 3px solid var(--stone-darker);
+		padding: 0.75rem;
+	}
+
+	.step-image :global(img) {
+		max-width: 100%;
+		max-height: 80vh;
+		width: auto;
+		height: auto;
+		display: block;
+	}
+
+	.step-caption {
+		margin: 1.5rem auto 0;
+		max-width: 640px;
+		text-align: center;
+		font-size: 1.3rem;
+		line-height: 1.6;
+		color: var(--page-text);
+	}
+
+	.nav[hidden] {
+		display: none;
+	}
+
+	.nav {
+		display: flex;
+		justify-content: center;
+		gap: 1rem;
+		margin-top: 2rem;
+	}
+
+	.nav:not([hidden]) {
+		animation: step-in 0.35s ease;
+	}
+
+	.nav-button {
+		font-family: var(--font-display);
+		font-size: 1.1rem;
+		cursor: pointer;
+		color: var(--text-dark);
+		padding: 1rem 2.25rem;
+		background: var(--stone-light);
+		border-top: 2px solid #e4e4e4;
+		border-left: 2px solid #e4e4e4;
+		border-right: 2px solid var(--stone-dark);
+		border-bottom: 2px solid var(--stone-dark);
+		transition:
+			background-color 0.15s ease,
+			transform 0.1s ease,
+			opacity 0.2s ease;
+	}
+
+	.nav-button:hover:not(:disabled) {
+		background: #d4d4d4;
+		transform: translateY(-2px);
+	}
+
+	.nav-button:active:not(:disabled) {
+		transform: translateY(0);
+	}
+
+	.nav-button:disabled {
+		opacity: 0.4;
+		cursor: default;
+	}
+
+	.nav-button-primary {
+		color: var(--text-dark);
+		background: var(--lantern);
+		border-top-color: #ffd489;
+		border-left-color: #ffd489;
+		border-right-color: var(--lantern-dark);
+		border-bottom-color: var(--lantern-dark);
+	}
+
+	.nav-button-primary:hover:not(:disabled) {
+		background: #ffbe57;
+	}
+
+	.congrats {
+		display: flex;
+		justify-content: center;
+		padding: 2rem 0;
+	}
+
+	.congrats-panel {
+		text-align: center;
+		max-width: 480px;
+		padding: 2.5rem 2rem;
+		background: var(--stone);
+		border: 3px solid var(--lantern);
+		box-shadow: 0 0 0 3px var(--stone-darker);
+		animation: congrats-in 0.5s ease-out;
+	}
+
+	.congrats-icon {
+		display: flex;
+		justify-content: center;
+		margin-bottom: 1rem;
+		animation: congrats-icon-pop 0.6s ease-out;
+	}
+
+	.congrats-eyebrow {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: 1rem;
+		color: var(--lantern);
+	}
+
+	.congrats-title {
+		margin: 0.4rem 0 0;
+		font-family: var(--font-display);
+		font-size: 1.8rem;
+		color: var(--text-light);
+	}
+
+	.congrats-text {
+		margin: 1rem 0 0;
+		font-size: 1.1rem;
+		color: var(--text-light);
+		line-height: 1.6;
+	}
+
+	.congrats-actions {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 1.25rem;
+		margin-top: 1.75rem;
+	}
+
+	.congrats-button {
+		font-family: var(--font-display);
+		font-size: 1rem;
+		text-decoration: none;
+		color: var(--text-dark);
+		padding: 0.9rem 1.75rem;
+		background: var(--lantern);
+		border-top: 2px solid #ffd489;
+		border-left: 2px solid #ffd489;
+		border-right: 2px solid var(--lantern-dark);
+		border-bottom: 2px solid var(--lantern-dark);
+		transition:
+			background-color 0.15s ease,
+			transform 0.1s ease;
+	}
+
+	.congrats-button:hover {
+		background: #ffbe57;
+		transform: translateY(-2px);
+	}
+
+	.congrats-button:active {
+		transform: translateY(0);
+	}
+
+	.congrats-link {
+		font-family: var(--font-body);
+		font-size: 1rem;
+		color: var(--text-dim);
+		text-decoration: underline;
+	}
+
+	.congrats-link:hover {
+		color: var(--text-light);
+	}
+
+	@keyframes congrats-in {
+		from {
+			opacity: 0;
+			transform: translateY(12px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes congrats-icon-pop {
+		0% {
+			transform: scale(0.4);
+			opacity: 0;
+		}
+		60% {
+			transform: scale(1.15);
+			opacity: 1;
+		}
+		100% {
+			transform: scale(1);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.congrats-panel,
+		.congrats-icon {
+			animation: none;
+		}
+	}
+</style>

@@ -1,0 +1,70 @@
+---
+interface Props {
+	color: string;
+	size?: number;
+}
+
+const { color, size = 72 } = Astro.props;
+
+function shade(hex: string, percent: number): string {
+	const n = parseInt(hex.replace('#', ''), 16);
+	const r = (n >> 16) & 0xff;
+	const g = (n >> 8) & 0xff;
+	const b = n & 0xff;
+	const t = percent < 0 ? 0 : 255;
+	const p = Math.abs(percent);
+	const nr = Math.round((t - r) * p) + r;
+	const ng = Math.round((t - g) * p) + g;
+	const nb = Math.round((t - b) * p) + b;
+	return `#${((1 << 24) + (nr << 16) + (ng << 8) + nb).toString(16).slice(1)}`;
+}
+
+const light = shade(color, 0.35);
+const mid = color;
+const dark = shade(color, -0.4);
+const outline = shade(color, -0.72);
+const latch = '#2b2b2b';
+
+// 12x12 pixel grid. o=outline l=light lid m=mid body seam d=dark shadow h=latch .=transparent
+const rows = [
+	'.oooooooooo.',
+	'ollllllllllo',
+	'ollllllllllo',
+	'oddddddddddo',
+	'ommmmhhmmmmo',
+	'ommmmhhmmmmo',
+	'ommmmmmmmmmo',
+	'oddddddddddo',
+	'oddddddddddo',
+	'oddddddddddo',
+	'oddddddddddo',
+	'.oooooooooo.',
+];
+
+const fill: Record<string, string> = {
+	o: outline,
+	l: light,
+	m: mid,
+	d: dark,
+	h: latch,
+};
+---
+
+<svg
+	viewBox="0 0 12 12"
+	width={size}
+	height={size}
+	shape-rendering="crispEdges"
+	aria-hidden="true"
+	class="shulker-icon"
+>
+	{
+		rows.map((row, y) =>
+			[...row].map((ch, x) =>
+				ch === '.' ? null : (
+					<rect x={x} y={y} width="1" height="1" fill={fill[ch]} />
+				)
+			)
+		)
+	}
+</svg>

@@ -1,0 +1,193 @@
+---
+interface Props {
+	title: string;
+	showThemeToggle?: boolean;
+}
+
+const { title, showThemeToggle = true } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,400;0,500;0,700;1,400&family=Pixelify+Sans:wght@400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<script is:inline>
+			const savedTheme = localStorage.getItem('rsi-theme') || 'light';
+			document.documentElement.dataset.theme = savedTheme;
+		</script>
+	</head>
+	<body>
+		<slot />
+
+		{
+			showThemeToggle && (
+				<div class="time-toggle-wrap">
+					<button id="time-toggle" class="time-toggle" type="button" aria-label="Switch between day and night mode">
+						<span class="time-toggle-icon" aria-hidden="true">☀️</span>
+						<span class="time-toggle-label">Day mode</span>
+					</button>
+				</div>
+			)
+		}
+	</body>
+</html>
+
+<script>
+	const button = document.getElementById('time-toggle') as HTMLButtonElement | null;
+
+	if (button) {
+		const icon = button.querySelector('.time-toggle-icon') as HTMLElement;
+		const label = button.querySelector('.time-toggle-label') as HTMLElement;
+
+		const render = (theme: string) => {
+			icon.textContent = theme === 'dark' ? '🌙' : '☀️';
+			label.textContent = theme === 'dark' ? 'Night mode' : 'Day mode';
+		};
+
+		render(document.documentElement.dataset.theme ?? 'light');
+
+		let spins = 0;
+
+		button.addEventListener('click', () => {
+			const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+			document.documentElement.dataset.theme = next;
+			localStorage.setItem('rsi-theme', next);
+			render(next);
+			spins += 1;
+			icon.style.transform = `rotate(${spins * 180}deg)`;
+		});
+	}
+</script>
+
+<style is:global>
+	:root {
+		--page-bg: #dedad2;
+		--page-bg-edge: #c7c1b0;
+		--page-text: #241c12;
+		--page-muted: #5c5346;
+
+		--wood: #6b4726;
+		--wood-dark: #4a3018;
+		--wood-light: #8a6238;
+		--stone: #8b8b8b;
+		--stone-light: #c6c6c6;
+		--stone-dark: #373737;
+		--stone-darker: #1e1e1e;
+		--lantern: #f2a93b;
+		--lantern-dark: #b9761c;
+		--text-light: #f4efdf;
+		--text-dim: #b9b2a0;
+		--text-dark: #241c12;
+		--font-display: 'Pixelify Sans', ui-sans-serif, system-ui, sans-serif;
+		--font-body: 'Karla', ui-sans-serif, system-ui, sans-serif;
+	}
+
+	:root[data-theme='dark'] {
+		--page-bg: #16130f;
+		--page-bg-edge: #0e0c09;
+		--page-text: #f4efdf;
+		--page-muted: #b9b2a0;
+	}
+
+	* {
+		box-sizing: border-box;
+	}
+
+	*,
+	*::before,
+	*::after {
+		transition:
+			background-color 0.3s ease,
+			border-color 0.3s ease,
+			color 0.3s ease,
+			box-shadow 0.3s ease;
+	}
+
+	body {
+		transition: background 0.4s ease;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.001ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.001ms !important;
+			scroll-behavior: auto !important;
+		}
+	}
+
+	html {
+		font-size: 112.5%;
+	}
+
+	html,
+	body {
+		margin: 0;
+		padding: 0;
+	}
+
+	body {
+		background: radial-gradient(ellipse at top, var(--page-bg) 0%, var(--page-bg-edge) 100%);
+		color: var(--page-text);
+		font-family: var(--font-body);
+		min-height: 100vh;
+	}
+
+	a {
+		color: inherit;
+	}
+
+	.time-toggle-wrap {
+		display: flex;
+		justify-content: center;
+		padding: 1rem 1.5rem 2.5rem;
+	}
+
+	.time-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		font-family: var(--font-display);
+		font-size: 1rem;
+		cursor: pointer;
+		color: var(--text-dark);
+		padding: 0.85rem 1.5rem;
+		background: var(--stone-light);
+		border-top: 2px solid #e4e4e4;
+		border-left: 2px solid #e4e4e4;
+		border-right: 2px solid var(--stone-dark);
+		border-bottom: 2px solid var(--stone-dark);
+		transition:
+			background-color 0.15s ease,
+			transform 0.15s ease;
+	}
+
+	.time-toggle:hover {
+		background: #d4d4d4;
+		transform: translateY(-2px);
+	}
+
+	.time-toggle:active {
+		border-top-color: var(--stone-dark);
+		border-left-color: var(--stone-dark);
+		border-right-color: #e4e4e4;
+		border-bottom-color: #e4e4e4;
+		transform: translateY(0);
+	}
+
+	.time-toggle-icon {
+		display: inline-block;
+		font-size: 1.3rem;
+		transition: transform 0.5s ease;
+	}
+</style>

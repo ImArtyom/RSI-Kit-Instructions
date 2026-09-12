@@ -1,0 +1,169 @@
+---
+import ShulkerIcon from './ShulkerIcon.astro';
+import type { Kit } from '../data/kits';
+
+interface Props {
+	kit?: Kit;
+	featured?: boolean;
+}
+
+const { kit, featured = false } = Astro.props;
+---
+
+{
+	kit ? (
+		<div class:list={['slot', { featured }]} data-kit-name={kit.name.toLowerCase()}>
+			<div class="slot-well">
+				<ShulkerIcon color={kit.color} size={featured ? 140 : 100} />
+			</div>
+			<p class="slot-name">{kit.name}</p>
+			<p class="slot-number">#{kit.number}</p>
+			<a class="slot-button" href={`/kits/${kit.slug}`}>
+				See kit
+			</a>
+		</div>
+	) : (
+		<div class="slot slot-empty" aria-hidden="true">
+			<div class="slot-well" />
+		</div>
+	)
+}
+
+<style>
+	.slot[hidden] {
+		display: none;
+	}
+
+	.slot {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 1.5rem 1rem 1.75rem;
+		background: var(--stone);
+		border-top: 3px solid var(--stone-light);
+		border-left: 3px solid var(--stone-light);
+		border-right: 3px solid var(--stone-darker);
+		border-bottom: 3px solid var(--stone-darker);
+		transition:
+			transform 0.2s ease,
+			box-shadow 0.2s ease;
+	}
+
+	.slot:not([hidden]) {
+		animation: slot-in 0.4s ease backwards;
+	}
+
+	.slot:nth-child(1) {
+		animation-delay: 0s;
+	}
+	.slot:nth-child(2) {
+		animation-delay: 0.05s;
+	}
+	.slot:nth-child(3) {
+		animation-delay: 0.1s;
+	}
+	.slot:nth-child(4) {
+		animation-delay: 0.15s;
+	}
+	.slot:nth-child(5) {
+		animation-delay: 0.2s;
+	}
+	.slot:nth-child(6) {
+		animation-delay: 0.25s;
+	}
+
+	.slot:not(.slot-empty):hover {
+		transform: translateY(-6px);
+		box-shadow: 0 10px 18px rgba(0, 0, 0, 0.28);
+	}
+
+	@keyframes slot-in {
+		from {
+			opacity: 0;
+			transform: translateY(14px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.slot.featured {
+		grid-column: span 2;
+	}
+
+	.slot-well {
+		width: 110px;
+		height: 110px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--stone-darker);
+		border: 2px solid var(--stone-dark);
+		box-shadow: inset 2px 2px 0 #000;
+	}
+
+	.featured .slot-well {
+		width: 150px;
+		height: 150px;
+	}
+
+	.slot-name {
+		margin: 0.5rem 0 0;
+		font-family: var(--font-display);
+		font-size: 1.25rem;
+		color: var(--text-light);
+		text-align: center;
+		line-height: 1.3;
+	}
+
+	.featured .slot-name {
+		font-size: 1.6rem;
+	}
+
+	.slot-number {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: 0.95rem;
+		color: var(--text-dim);
+	}
+
+	.slot-button {
+		margin-top: 0.65rem;
+		font-family: var(--font-display);
+		font-size: 1rem;
+		text-decoration: none;
+		color: var(--text-dark);
+		padding: 0.9rem 1.6rem;
+		background: var(--lantern);
+		border-top: 2px solid #ffd489;
+		border-left: 2px solid #ffd489;
+		border-right: 2px solid var(--lantern-dark);
+		border-bottom: 2px solid var(--lantern-dark);
+		transition:
+			background-color 0.15s ease,
+			transform 0.1s ease;
+	}
+
+	.slot-button:hover {
+		background: #ffbe57;
+		transform: translateY(-2px);
+	}
+
+	.slot-button:active {
+		border-top-color: var(--lantern-dark);
+		border-left-color: var(--lantern-dark);
+		border-right-color: #ffd489;
+		border-bottom-color: #ffd489;
+		transform: translateY(0);
+	}
+
+	.slot-empty {
+		opacity: 0.55;
+	}
+
+	.slot-empty .slot-well {
+		box-shadow: inset 2px 2px 0 #000;
+	}
+</style>

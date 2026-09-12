@@ -1,0 +1,281 @@
+---
+import Layout from '../layouts/Layout.astro';
+import KitCard from '../components/KitCard.astro';
+import SiteNav from '../components/SiteNav.astro';
+import { kits } from '../data/kits';
+---
+
+<Layout title="Recommended — RSI">
+	<header class="header">
+		<div class="header-inner">
+			<p class="wordmark">RSI</p>
+			<p class="tagline">Find the right kit for your build</p>
+			<SiteNav current="recommended" />
+		</div>
+	</header>
+
+	<main class="main">
+		<div id="quiz">
+			<div class="quiz-step" data-step="category">
+				<p class="quiz-counter">Question 1 of 2</p>
+				<h2 class="quiz-question">What do you want to build?</h2>
+				<div class="quiz-options">
+					<button class="quiz-option" type="button" data-answer="door">A door</button>
+					<button class="quiz-option" type="button" data-answer="farm">A farm</button>
+					<button class="quiz-option" type="button" data-answer="storage">Storage &amp; sorting</button>
+					<button class="quiz-option" type="button" data-answer="decoration">Decoration</button>
+				</div>
+			</div>
+
+			<div class="quiz-step" data-step="size" hidden>
+				<button class="quiz-back" type="button" data-back="category">&lsaquo; Back</button>
+				<p class="quiz-counter">Question 2 of 2</p>
+				<h2 class="quiz-question">How big should it be?</h2>
+				<div class="quiz-options">
+					<button class="quiz-option" type="button" data-answer="small">Small</button>
+					<button class="quiz-option" type="button" data-answer="medium">Medium</button>
+					<button class="quiz-option" type="button" data-answer="large">Large</button>
+				</div>
+			</div>
+
+			<div class="quiz-step quiz-results" data-step="results" hidden>
+				<button class="quiz-back" type="button" data-back="size">&lsaquo; Back</button>
+				<h2 class="quiz-question">Here's what you'll need</h2>
+
+				<div id="quiz-matches" class="quiz-grid">
+					{
+						kits.map((kit) => (
+							<div class="quiz-result" data-category={kit.category} data-size={kit.size} hidden>
+								<KitCard kit={kit} />
+							</div>
+						))
+					}
+				</div>
+
+				<p id="quiz-empty" class="quiz-empty" hidden>
+					No kits match that yet — check back later, or <a href="/">browse all kits</a>.
+				</p>
+
+				<button id="quiz-restart" class="quiz-restart" type="button">Start over</button>
+			</div>
+		</div>
+	</main>
+</Layout>
+
+<script>
+	const steps = Array.from(document.querySelectorAll<HTMLElement>('.quiz-step'));
+	const results = Array.from(document.querySelectorAll<HTMLElement>('.quiz-result'));
+	const emptyMessage = document.getElementById('quiz-empty') as HTMLElement;
+	const restartBtn = document.getElementById('quiz-restart') as HTMLButtonElement;
+
+	const answers = { category: '', size: '' };
+
+	function showStep(name: string) {
+		steps.forEach((el) => {
+			el.hidden = el.dataset.step !== name;
+		});
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}
+
+	function showResults() {
+		const exact = results.filter(
+			(el) => el.dataset.category === answers.category && el.dataset.size === answers.size
+		);
+		const categoryOnly = results.filter((el) => el.dataset.category === answers.category);
+		const matches = exact.length > 0 ? exact : categoryOnly;
+
+		results.forEach((el) => {
+			el.hidden = !matches.includes(el);
+		});
+		emptyMessage.hidden = matches.length > 0;
+
+		showStep('results');
+	}
+
+	document.querySelectorAll<HTMLButtonElement>('.quiz-option').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const step = btn.closest<HTMLElement>('.quiz-step')?.dataset.step;
+			if (step === 'category') {
+				answers.category = btn.dataset.answer ?? '';
+				showStep('size');
+			} else if (step === 'size') {
+				answers.size = btn.dataset.answer ?? '';
+				showResults();
+			}
+		});
+	});
+
+	document.querySelectorAll<HTMLButtonElement>('.quiz-back').forEach((btn) => {
+		btn.addEventListener('click', () => showStep(btn.dataset.back ?? 'category'));
+	});
+
+	restartBtn.addEventListener('click', () => {
+		answers.category = '';
+		answers.size = '';
+		showStep('category');
+	});
+</script>
+
+<style>
+	.header {
+		background: linear-gradient(180deg, var(--wood-light) 0%, var(--wood) 60%, var(--wood-dark) 100%);
+		border-bottom: 4px solid var(--wood-dark);
+		padding: 2.25rem 1.5rem 1.75rem;
+	}
+
+	.header-inner {
+		max-width: 1120px;
+		margin: 0 auto;
+		text-align: center;
+	}
+
+	.wordmark {
+		font-family: var(--font-display);
+		font-size: clamp(2.75rem, 6vw, 4rem);
+		font-weight: 600;
+		margin: 0;
+		color: var(--text-light);
+		letter-spacing: 0.04em;
+	}
+
+	.tagline {
+		margin: 0.5rem 0 0;
+		font-family: var(--font-body);
+		font-size: 1.25rem;
+		color: rgba(244, 239, 223, 0.75);
+	}
+
+	.main {
+		max-width: 900px;
+		margin: 0 auto;
+		padding: 3rem 1.5rem;
+		min-height: calc(100vh - 320px);
+	}
+
+	.quiz-step[hidden] {
+		display: none;
+	}
+
+	.quiz-step:not([hidden]) {
+		animation: quiz-in 0.35s ease;
+	}
+
+	@keyframes quiz-in {
+		from {
+			opacity: 0;
+			transform: translateY(12px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.quiz-counter {
+		text-align: center;
+		font-family: var(--font-display);
+		font-size: 1rem;
+		color: var(--page-muted);
+		margin: 0 0 0.75rem;
+	}
+
+	.quiz-question {
+		text-align: center;
+		font-family: var(--font-display);
+		font-size: clamp(1.6rem, 4vw, 2.2rem);
+		color: var(--page-text);
+		margin: 0 0 2rem;
+	}
+
+	.quiz-back {
+		display: block;
+		margin: 0 0 1.5rem;
+		font-family: var(--font-body);
+		font-size: 1rem;
+		color: var(--page-muted);
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+	}
+
+	.quiz-back:hover {
+		color: var(--page-text);
+	}
+
+	.quiz-options {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 1rem;
+	}
+
+	.quiz-option {
+		font-family: var(--font-display);
+		font-size: 1.1rem;
+		cursor: pointer;
+		color: var(--text-dark);
+		padding: 1.25rem 2rem;
+		background: var(--stone-light);
+		border-top: 2px solid #e4e4e4;
+		border-left: 2px solid #e4e4e4;
+		border-right: 2px solid var(--stone-dark);
+		border-bottom: 2px solid var(--stone-dark);
+		transition:
+			background-color 0.15s ease,
+			transform 0.15s ease;
+	}
+
+	.quiz-option:hover {
+		background: var(--lantern);
+		transform: translateY(-3px);
+	}
+
+	.quiz-option:active {
+		transform: translateY(0);
+	}
+
+	.quiz-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.quiz-empty {
+		text-align: center;
+		font-size: 1.1rem;
+		color: var(--page-text);
+		line-height: 1.6;
+	}
+
+	.quiz-empty a {
+		color: var(--lantern);
+	}
+
+	.quiz-restart {
+		display: block;
+		margin: 2rem auto 0;
+		font-family: var(--font-display);
+		font-size: 1rem;
+		cursor: pointer;
+		color: var(--text-dark);
+		padding: 0.9rem 1.75rem;
+		background: var(--stone-light);
+		border-top: 2px solid #e4e4e4;
+		border-left: 2px solid #e4e4e4;
+		border-right: 2px solid var(--stone-dark);
+		border-bottom: 2px solid var(--stone-dark);
+		transition:
+			background-color 0.15s ease,
+			transform 0.1s ease;
+	}
+
+	.quiz-restart:hover {
+		background: #d4d4d4;
+		transform: translateY(-2px);
+	}
+
+	.quiz-restart:active {
+		transform: translateY(0);
+	}
+</style>
